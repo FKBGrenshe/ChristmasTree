@@ -9,22 +9,61 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hasStarted, setHasStarted] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const newPhotos: string[] = [];
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          if (ev.target?.result) {
-            newPhotos.push(ev.target.result as string);
-            if (newPhotos.length === files.length) {
-                addPhotos(newPhotos);
+  // Compress image to save LocalStorage space
+  const processFile = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Max dimension 800px to ensure we can store multiple photos without hitting quota
+          const MAX_SIZE = 800; 
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
             }
           }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Compress to JPEG 0.7 quality
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          } else {
+            resolve(e.target?.result as string);
+          }
         };
-        reader.readAsDataURL(file as Blob);
-      });
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      try {
+        const promises = Array.from(files).map((file) => processFile(file as File));
+        const newPhotos = await Promise.all(promises);
+        addPhotos(newPhotos);
+        // Reset input to allow re-uploading same file if needed
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      } catch (error) {
+        console.error("Image upload failed", error);
+        alert("图片上传失败，可能是图片太大或格式不支持");
+      }
     }
   };
 

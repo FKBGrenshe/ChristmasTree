@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { TreeState, AppState } from './types';
 
 // Default photos - You can replace these URLs with your own hosted images
@@ -10,16 +11,24 @@ const DEFAULT_PHOTOS = [
     'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=600&auto=format&fit=crop', // Gift
 ];
 
-export const useStore = create<AppState>((set) => ({
-  mode: TreeState.FORMED,
-  setMode: (mode) => set({ mode }),
-  
-  uploadedPhotos: DEFAULT_PHOTOS,
-  selectedPhoto: null,
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      mode: TreeState.FORMED,
+      setMode: (mode) => set({ mode }),
+      
+      uploadedPhotos: DEFAULT_PHOTOS,
+      selectedPhoto: null,
 
-  addPhotos: (urls) => set((state) => ({ 
-    uploadedPhotos: [...urls, ...state.uploadedPhotos] // New photos first
-  })),
-  
-  setSelectedPhoto: (url) => set({ selectedPhoto: url }),
-}));
+      addPhotos: (urls) => set((state) => ({ 
+        uploadedPhotos: [...urls, ...state.uploadedPhotos] // New photos first
+      })),
+      
+      setSelectedPhoto: (url) => set({ selectedPhoto: url }),
+    }),
+    {
+      name: 'christmas-tree-memories', // Key for localStorage
+      partialize: (state) => ({ uploadedPhotos: state.uploadedPhotos }), // Only persist photos
+    }
+  )
+);
