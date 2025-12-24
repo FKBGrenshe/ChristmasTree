@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Grand Luxury Christmas Tree</title>
+    <title>给最亲爱的你 - 圣诞快乐</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -27,12 +27,20 @@
         }
       }
     </script>
-    <!-- Load TensorFlow.js and Handpose -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
     <style>
       body { margin: 0; overflow: hidden; background-color: #011A0C; }
       #root { width: 100vw; height: 100vh; }
+      /* Custom scrollbar for overlay */
+      .photo-overlay::-webkit-scrollbar {
+        width: 8px;
+      }
+      .photo-overlay::-webkit-scrollbar-track {
+        background: #011A0C;
+      }
+      .photo-overlay::-webkit-scrollbar-thumb {
+        background: #D4AF37;
+        border-radius: 4px;
+      }
     </style>
   <script type="importmap">
 {

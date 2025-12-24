@@ -1,33 +1,25 @@
 import { create } from 'zustand';
 import { TreeState, AppState } from './types';
 
-// Default luxury placeholder images
+// Default photos - You can replace these URLs with your own hosted images
+// Or simply use the Upload button in the app to add local files.
 const DEFAULT_PHOTOS = [
-    'https://picsum.photos/id/1011/400/400', // landscape
-    'https://picsum.photos/id/1015/400/400', // river
-    'https://picsum.photos/id/1016/400/400', // canyon
-    'https://picsum.photos/id/1025/400/400', // pug
+    'https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=600&auto=format&fit=crop', // Couple/Love vibe
+    'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop', // Christmas cat
+    'https://images.unsplash.com/photo-1512389142860-9c449e58a543?q=80&w=600&auto=format&fit=crop', // Snow landscape
+    'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?q=80&w=600&auto=format&fit=crop', // Gift
 ];
 
 export const useStore = create<AppState>((set) => ({
   mode: TreeState.FORMED,
   setMode: (mode) => set({ mode }),
   
-  cameraOffset: { x: 0, y: 0 },
-  setCameraOffset: (x, y) => set({ cameraOffset: { x, y } }),
-  
-  isCameraEnabled: false,
-  setCameraEnabled: (enabled) => set({ isCameraEnabled: enabled }),
-
   uploadedPhotos: DEFAULT_PHOTOS,
-  currentPhotoIndex: 0,
+  selectedPhoto: null,
+
   addPhotos: (urls) => set((state) => ({ 
     uploadedPhotos: [...urls, ...state.uploadedPhotos] // New photos first
   })),
-  cyclePhoto: (direction) => set((state) => {
-    const total = state.uploadedPhotos.length;
-    // Modulo arithmetic that handles negative numbers correctly
-    const nextIndex = (state.currentPhotoIndex + direction + total) % total;
-    return { currentPhotoIndex: nextIndex };
-  }),
+  
+  setSelectedPhoto: (url) => set({ selectedPhoto: url }),
 }));

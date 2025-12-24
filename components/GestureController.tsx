@@ -47,69 +47,75 @@ export const GestureController: React.FC = () => {
 
     let animationId: number;
     const video = videoRef.current;
+    let isRunning = true;
 
     const detect = async () => {
+      if (!isRunning) return;
+
       if (video.readyState === 4) {
-        const predictions = await model.estimateHands(video);
+        try {
+          const predictions = await model.estimateHands(video);
 
-        if (predictions.length > 0) {
-          const hand = predictions[0];
-          
-          // 1. Gesture Logic: Open vs Closed
-          const annotations = hand.annotations;
-          const palmBase = annotations.palmBase[0];
-          const middleTip = annotations.middleFinger[3];
-          
-          const dist = Math.sqrt(
-              Math.pow(palmBase[0] - middleTip[0], 2) + 
-              Math.pow(palmBase[1] - middleTip[1], 2)
-          );
-          
-          const isOpen = dist > 80; // Adjusted threshold slightly
-          
-          if (isOpen) {
-             setMode(TreeState.CHAOS);
-             setStatus("Detected: OPEN (Unleashed)");
-          } else {
-             setMode(TreeState.FORMED);
-             setStatus("Detected: CLOSED (Formed)");
-          }
-
-          // 2. Camera & Swipe Control
-          const xRaw = hand.landmarks[0][0]; // Wrist x
-          const yRaw = hand.landmarks[0][1];
-          const normalizedX = (xRaw / video.videoWidth) * 2 - 1; // -1 to 1
-          const normalizedY = (yRaw / video.videoHeight) * 2 - 1;
-          
-          // Invert X because webcam is mirrored
-          const invertedX = -normalizedX;
-
-          // Camera Move (Smooth)
-          setCameraOffset(invertedX * 10, -normalizedY * 5);
-
-          // 3. Swipe Detection (Only when Open/Chaos to view photos)
-          if (isOpen) {
-            const now = Date.now();
-            if (now > swipeCooldownRef.current) {
-                const deltaX = invertedX - lastXRef.current;
-                
-                // Threshold for swipe velocity
-                if (deltaX > 0.15) {
-                    cyclePhoto(1); // Swipe Right -> Next
-                    swipeCooldownRef.current = now + 600; // Cooldown
-                    setStatus(">> SWIPE RIGHT >>");
-                } else if (deltaX < -0.15) {
-                    cyclePhoto(-1); // Swipe Left -> Prev
-                    swipeCooldownRef.current = now + 600;
-                    setStatus("<< SWIPE LEFT <<");
-                }
+          if (predictions.length > 0) {
+            const hand = predictions[0];
+            
+            // 1. Gesture Logic: Open vs Closed
+            const annotations = hand.annotations;
+            const palmBase = annotations.palmBase[0];
+            const middleTip = annotations.middleFinger[3];
+            
+            const dist = Math.sqrt(
+                Math.pow(palmBase[0] - middleTip[0], 2) + 
+                Math.pow(palmBase[1] - middleTip[1], 2)
+            );
+            
+            const isOpen = dist > 80; 
+            
+            if (isOpen) {
+              setMode(TreeState.CHAOS);
+              setStatus("Detected: OPEN (Unleashed)");
+            } else {
+              setMode(TreeState.FORMED);
+              setStatus("Detected: CLOSED (Formed)");
             }
-          }
-          
-          lastXRef.current = invertedX;
 
-        } else {
-            setStatus("No hand detected");
+            // 2. Camera & Swipe Control
+            const xRaw = hand.landmarks[0][0]; // Wrist x
+            const yRaw = hand.landmarks[0][1];
+            const normalizedX = (xRaw / video.videoWidth) * 2 - 1; // -1 to 1
+            const normalizedY = (yRaw / video.videoHeight) * 2 - 1;
+            
+            // Invert X because webcam is mirrored
+            const invertedX = -normalizedX;
+
+            // Camera Move (Smooth)
+            setCameraOffset(invertedX * 10, -normalizedY * 5);
+
+            // 3. Swipe Detection
+            if (isOpen) {
+              const now = Date.now();
+              if (now > swipeCooldownRef.current) {
+                  const deltaX = invertedX - lastXRef.current;
+                  
+                  if (deltaX > 0.15) {
+                      cyclePhoto(1); 
+                      swipeCooldownRef.current = now + 600; 
+                      setStatus(">> SWIPE RIGHT >>");
+                  } else if (deltaX < -0.15) {
+                      cyclePhoto(-1); 
+                      swipeCooldownRef.current = now + 600;
+                      setStatus("<< SWIPE LEFT <<");
+                  }
+              }
+            }
+            
+            lastXRef.current = invertedX;
+
+          } else {
+              setStatus("No hand detected");
+          }
+        } catch (err) {
+          console.warn("Detection error:", err);
         }
       }
       animationId = requestAnimationFrame(detect);
@@ -117,20 +123,34 @@ export const GestureController: React.FC = () => {
 
     detect();
 
-    return () => cancelAnimationFrame(animationId);
+    return () => {
+      isRunning = false;
+      cancelAnimationFrame(animationId);
+    };
   }, [model, isCameraEnabled, setMode, setCameraOffset, cyclePhoto]);
 
-  // Setup Webcam
+  // Setup Webcam with Safe Check
   useEffect(() => {
-    if (isCameraEnabled && videoRef.current) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          videoRef.current!.srcObject = stream;
-        })
-        .catch((err) => {
-          console.error("Webcam denied", err);
-          setStatus("Webcam denied.");
-        });
+    if (isCameraEnabled) {
+      // SECURITY CHECK: Check if browser supports mediaDevices
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus("Error: Camera requires HTTPS or localhost.");
+        console.error("Camera API not available. This is likely because the site is served over HTTP instead of HTTPS.");
+        return;
+      }
+
+      if (videoRef.current) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then((stream) => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+            }
+          })
+          .catch((err) => {
+            console.error("Webcam denied or error", err);
+            setStatus("Webcam denied or unavailable.");
+          });
+      }
     }
   }, [isCameraEnabled]);
 

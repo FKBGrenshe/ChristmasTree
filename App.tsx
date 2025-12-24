@@ -1,14 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Scene } from './components/Scene';
-import { GestureController } from './components/GestureController';
 import { useStore } from './store';
 import { TreeState } from './types';
 
 const App: React.FC = () => {
-  const { mode, setMode, isCameraEnabled, setCameraEnabled, addPhotos } = useStore();
-  const [showInstructions, setShowInstructions] = useState(true);
+  const { mode, setMode, addPhotos, selectedPhoto, setSelectedPhoto } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -19,13 +18,11 @@ const App: React.FC = () => {
         reader.onload = (ev) => {
           if (ev.target?.result) {
             newPhotos.push(ev.target.result as string);
-            // If we processed the last one, update store
             if (newPhotos.length === files.length) {
                 addPhotos(newPhotos);
             }
           }
         };
-        // Fix: Cast file to Blob to resolve 'unknown' type error
         reader.readAsDataURL(file as Blob);
       });
     }
@@ -33,99 +30,113 @@ const App: React.FC = () => {
 
   return (
     <div className="w-full h-full relative bg-emerald-deep overflow-hidden">
-      {/* UI Overlay */}
-      <div className="absolute top-0 left-0 w-full p-8 z-10 flex justify-between items-start pointer-events-none">
-        <div>
-          <h1 className="font-serif text-4xl md:text-6xl text-gold-light drop-shadow-lg tracking-widest uppercase">
-            The Grand Tree
+      
+      {/* Main Title Overlay */}
+      <div className={`absolute top-0 left-0 w-full p-8 z-10 flex flex-col justify-between items-center pointer-events-none transition-opacity duration-1000 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="text-center">
+          <h1 className="font-serif text-4xl md:text-6xl text-gold-light drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] tracking-widest uppercase">
+            圣诞快乐，亲爱的
           </h1>
-          <p className="font-serif text-gold text-sm md:text-lg mt-2 tracking-widest opacity-80">
-            Luxury. Interactive. Magnificent.
+          <p className="font-serif text-gold text-sm md:text-lg mt-4 tracking-[0.2em] opacity-80">
+            愿你的每一刻都如星光般璀璨
           </p>
-        </div>
-        
-        <div className="pointer-events-auto flex flex-col gap-4 items-end">
-           {/* Upload Button */}
-           <input 
-             type="file" 
-             ref={fileInputRef} 
-             multiple 
-             accept="image/*" 
-             className="hidden" 
-             onChange={handleFileUpload}
-           />
-           <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="px-6 py-2 bg-gold/10 border border-gold text-gold font-serif tracking-widest uppercase hover:bg-gold hover:text-emerald-deep transition-all duration-300 backdrop-blur-sm"
-          >
-            + Upload Memories
-          </button>
-
-          <button 
-            onClick={() => setCameraEnabled(!isCameraEnabled)}
-            className={`px-6 py-2 border border-gold font-serif tracking-widest uppercase transition-all duration-500 ${
-              isCameraEnabled ? 'bg-gold text-emerald-deep' : 'bg-transparent text-gold hover:bg-gold/10'
-            }`}
-          >
-            {isCameraEnabled ? 'Disable Camera' : 'Enable Gesture Control'}
-          </button>
         </div>
       </div>
 
-      {/* Mode Toggles (Fallback if no camera) */}
-      {!isCameraEnabled && (
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-10 flex gap-8 pointer-events-auto">
-          <button
-            onClick={() => setMode(TreeState.CHAOS)}
-            className={`px-8 py-3 font-serif text-xl border border-gold uppercase tracking-widest transition-all duration-300 ${
-              mode === TreeState.CHAOS ? 'bg-gold text-emerald-deep shadow-[0_0_20px_#D4AF37]' : 'text-gold bg-black/50 hover:bg-gold/20'
-            }`}
-          >
-            Unleash Chaos
-          </button>
-          <button
-            onClick={() => setMode(TreeState.FORMED)}
-            className={`px-8 py-3 font-serif text-xl border border-gold uppercase tracking-widest transition-all duration-300 ${
-              mode === TreeState.FORMED ? 'bg-gold text-emerald-deep shadow-[0_0_20px_#D4AF37]' : 'text-gold bg-black/50 hover:bg-gold/20'
-            }`}
-          >
-            Form Tree
-          </button>
+      {/* Start Screen */}
+      {!hasStarted && (
+        <div className="absolute inset-0 z-50 bg-emerald-deep flex flex-col items-center justify-center p-4 transition-opacity duration-1000">
+             <h1 className="font-serif text-5xl md:text-7xl text-gold mb-8 tracking-widest text-center animate-pulse">
+                Merry Christmas
+             </h1>
+             <p className="text-gold/60 mb-12 font-serif text-center max-w-md leading-relaxed">
+                这是为你准备的专属礼物。<br/>
+                包含了我们珍贵的回忆，和对未来的期许。
+             </p>
+             <button 
+                onClick={() => setHasStarted(true)}
+                className="px-12 py-4 bg-transparent border-2 border-gold text-gold font-serif text-xl tracking-[0.3em] hover:bg-gold hover:text-emerald-deep transition-all duration-500 shadow-[0_0_20px_#D4AF37]"
+             >
+                开启惊喜
+             </button>
         </div>
       )}
 
-      {/* Instructions Modal */}
-      {showInstructions && (
-        <div className="absolute inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-            <div className="border-2 border-gold p-8 max-w-lg text-center bg-emerald-deep">
-                <h2 className="text-3xl font-serif text-gold mb-4 uppercase">Instructions</h2>
-                <p className="text-gold/80 mb-6 font-serif leading-relaxed text-sm">
-                    Welcome to the Grand Interactive Christmas Experience.
-                    <br/><br/>
-                    1. <strong>Upload Memories:</strong> Add your own photos via the button.
-                    <br/>
-                    2. <strong>Enable Camera:</strong> Use hand gestures for magic.
-                    <br/>
-                    3. <strong>Open Hand 🖐:</strong> Explode the tree. Your photos will float.
-                    <br/>
-                    4. <strong>Swipe 🖐⬅➡:</strong> While hand is open, swipe Left/Right to browse your memories.
-                    <br/>
-                    5. <strong>Closed Hand ✊:</strong> Reform the tree.
-                </p>
-                <button 
-                    onClick={() => setShowInstructions(false)}
-                    className="px-6 py-2 bg-gold text-emerald-deep font-bold font-serif uppercase tracking-widest hover:bg-white transition-colors"
+      {/* Controls */}
+      {hasStarted && (
+        <>
+            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-10 flex gap-6 pointer-events-auto">
+              <button
+                onClick={() => setMode(TreeState.CHAOS)}
+                className={`px-6 py-2 md:px-8 md:py-3 font-serif text-lg border border-gold tracking-widest transition-all duration-500 rounded-sm ${
+                  mode === TreeState.CHAOS 
+                    ? 'bg-gold/90 text-emerald-deep shadow-[0_0_25px_#D4AF37] scale-105' 
+                    : 'text-gold bg-black/40 hover:bg-gold/20 backdrop-blur-sm'
+                }`}
+              >
+                ✨ 漫天星辰
+              </button>
+              <button
+                onClick={() => setMode(TreeState.FORMED)}
+                className={`px-6 py-2 md:px-8 md:py-3 font-serif text-lg border border-gold tracking-widest transition-all duration-500 rounded-sm ${
+                  mode === TreeState.FORMED 
+                    ? 'bg-gold/90 text-emerald-deep shadow-[0_0_25px_#D4AF37] scale-105' 
+                    : 'text-gold bg-black/40 hover:bg-gold/20 backdrop-blur-sm'
+                }`}
+              >
+                🎄 璀璨圣诞
+              </button>
+            </div>
+
+            <div className="absolute top-8 right-8 z-20 pointer-events-auto">
+                 <input 
+                   type="file" 
+                   ref={fileInputRef} 
+                   multiple 
+                   accept="image/*" 
+                   className="hidden" 
+                   onChange={handleFileUpload}
+                 />
+                 <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 text-xs border border-gold/50 text-gold/80 font-serif tracking-widest hover:bg-gold hover:text-emerald-deep transition-all duration-300"
                 >
-                    Enter Experience
+                  + 添加我们的回忆
                 </button>
             </div>
+            
+            <div className="absolute bottom-4 right-8 z-10 pointer-events-none">
+                <p className="text-gold/40 text-xs font-serif tracking-widest">
+                    拖拽旋转 · 滚轮缩放 · 点击照片
+                </p>
+            </div>
+        </>
+      )}
+
+      {/* Photo Overlay Modal */}
+      {selectedPhoto && (
+        <div 
+            className="absolute inset-0 z-40 bg-black/90 flex items-center justify-center p-4 md:p-12 backdrop-blur-md cursor-pointer"
+            onClick={() => setSelectedPhoto(null)}
+        >
+            <div className="relative max-w-full max-h-full p-2 border-2 border-gold bg-white shadow-[0_0_50px_#D4AF37] transform transition-transform duration-300 scale-100">
+                 <img 
+                    src={selectedPhoto} 
+                    alt="Memory" 
+                    className="max-h-[80vh] object-contain block"
+                 />
+                 <p className="text-emerald-deep font-serif text-center mt-2 tracking-widest text-sm uppercase">
+                    美好瞬间
+                 </p>
+            </div>
+            <p className="absolute bottom-8 text-gold/50 text-sm font-serif tracking-widest">
+                点击任意处关闭
+            </p>
         </div>
       )}
 
-      <GestureController />
-
       <Canvas
-        camera={{ position: [0, 4, 20], fov: 45 }}
+        camera={{ position: [0, 4, 25], fov: 45 }}
         gl={{ antialias: false, toneMappingExposure: 1.2 }}
         className="w-full h-full"
       >

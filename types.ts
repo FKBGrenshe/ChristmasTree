@@ -14,25 +14,13 @@ export interface DualPosition {
   speed?: number;
 }
 
-export interface HandGestureData {
-  isOpen: boolean; // True = Unleash (Chaos), False = Formed
-  handPosition: { x: number; y: number }; // Normalized -1 to 1
-  isDetected: boolean;
-}
-
 export interface AppState {
   mode: TreeState;
   setMode: (mode: TreeState) => void;
   
-  cameraOffset: { x: number; y: number };
-  setCameraOffset: (x: number, y: number) => void;
-  
-  isCameraEnabled: boolean;
-  setCameraEnabled: (enabled: boolean) => void;
-
   // Photo System
   uploadedPhotos: string[];
-  currentPhotoIndex: number;
+  selectedPhoto: string | null; // The photo currently being viewed in full screen
   addPhotos: (urls: string[]) => void;
-  cyclePhoto: (direction: 1 | -1) => void;
+  setSelectedPhoto: (url: string | null) => void;
 }

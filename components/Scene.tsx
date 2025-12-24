@@ -4,12 +4,23 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { Foliage } from './Foliage';
 import { Ornaments } from './Ornaments';
 import { Polaroids } from './Polaroids';
-import { CameraRig } from './CameraRig';
+import { useStore } from '../store';
 
 export const Scene: React.FC = () => {
+  const selectedPhoto = useStore(s => s.selectedPhoto);
+
   return (
     <>
-      <CameraRig />
+      {/* Mouse Control: Rotates around the tree */}
+      <OrbitControls 
+        enablePan={false} 
+        enableZoom={true} 
+        minDistance={10} 
+        maxDistance={40}
+        autoRotate={!selectedPhoto} // Stop rotation when viewing a photo
+        autoRotateSpeed={0.8}
+        target={[0, 4, 0]}
+      />
       
       {/* Cinematic Lighting */}
       <ambientLight intensity={0.2} color="#001100" />
