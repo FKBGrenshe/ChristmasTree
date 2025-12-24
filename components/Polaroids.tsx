@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Image } from '@react-three/drei';
 import * as THREE from 'three';
 import { getChaosPosition } from '../utils/geometry';
 import { useStore } from '../store';
 import { TreeState } from '../types';
 
-const FRAME_COUNT = 16; // Increased count slightly
+const FRAME_COUNT = 16; 
 
 export const Polaroids: React.FC = () => {
   const { mode, uploadedPhotos, setSelectedPhoto } = useStore();
@@ -54,15 +55,7 @@ interface PolaroidItemProps {
 
 const PolaroidItem: React.FC<PolaroidItemProps> = ({ data, mode, url, onClick }) => {
   const meshRef = useRef<THREE.Group>(null);
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [hovered, setHover] = useState(false);
-
-  useEffect(() => {
-    new THREE.TextureLoader().load(url, (loadedTex) => {
-        loadedTex.colorSpace = THREE.SRGBColorSpace;
-        setTexture(loadedTex);
-    });
-  }, [url]);
   
   const progress = useRef(0);
 
@@ -112,15 +105,15 @@ const PolaroidItem: React.FC<PolaroidItemProps> = ({ data, mode, url, onClick })
                 metalness={hovered ? 0.8 : 0.0}
             />
         </mesh>
-        {/* Photo */}
-        <mesh position={[0, 0.15, 0.06]}>
-            <planeGeometry args={[1, 1]} />
-            {texture ? (
-                <meshBasicMaterial map={texture} />
-            ) : (
-                <meshBasicMaterial color="#eee" />
-            )}
-        </mesh>
+        
+        {/* Photo using Drei Image for better loading/CORS handling */}
+        <Image 
+          url={url}
+          position={[0, 0.15, 0.06]}
+          scale={[1, 1]}
+          transparent
+          toneMapped={false} // Keep photos bright
+        />
     </group>
   );
 };

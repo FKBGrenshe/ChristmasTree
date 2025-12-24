@@ -2,8 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TreeState, AppState } from './types';
 
-// Default photos - You can replace these URLs with your own hosted images
-// Or simply use the Upload button in the app to add local files.
+// Default photos - Using Unsplash for reliable demo images
 const DEFAULT_PHOTOS = [
     'https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=600&auto=format&fit=crop', // Couple/Love vibe
     'https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop', // Christmas cat
@@ -27,7 +26,7 @@ export const useStore = create<AppState>()(
       setSelectedPhoto: (url) => set({ selectedPhoto: url }),
     }),
     {
-      name: 'christmas-tree-memories', // Key for localStorage
+      name: 'christmas-tree-memories-v3', // Bump version to v3 to clear any corrupted data from the failed folder attempt
       partialize: (state) => ({ uploadedPhotos: state.uploadedPhotos }), // Only persist photos
     }
   )
