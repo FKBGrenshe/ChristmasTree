@@ -7,7 +7,26 @@ import { TreeState } from './types';
 const App: React.FC = () => {
   const { mode, setMode, addPhotos, selectedPhoto, setSelectedPhoto } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
   const [hasStarted, setHasStarted] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Handle the start interaction (required for audio autoplay policies)
+  const handleStart = () => {
+    setHasStarted(true);
+    if (audioRef.current) {
+        audioRef.current.volume = 0.4; // Set a gentle volume
+        audioRef.current.play().catch(e => console.log("Playback prevented by browser", e));
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+        audioRef.current.muted = !isMuted;
+        setIsMuted(!isMuted);
+    }
+  };
 
   // Compress image to save LocalStorage space
   const processFile = (file: File): Promise<string> => {
@@ -70,11 +89,18 @@ const App: React.FC = () => {
   return (
     <div className="w-full h-full relative bg-emerald-deep overflow-hidden">
       
+      {/* Background Music - Relaxing Christmas Piano */}
+      <audio 
+        ref={audioRef} 
+        loop 
+        src="https://cdn.pixabay.com/audio/2022/10/14/audio_9939f792cb.mp3" 
+      />
+
       {/* Main Title Overlay */}
       <div className={`absolute top-0 left-0 w-full p-8 z-10 flex flex-col justify-between items-center pointer-events-none transition-opacity duration-1000 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}>
         <div className="text-center">
           <h1 className="font-serif text-4xl md:text-6xl text-gold-light drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] tracking-widest uppercase">
-            圣诞快乐，亲爱的
+            圣诞快乐！
           </h1>
           <p className="font-serif text-gold text-sm md:text-lg mt-4 tracking-[0.2em] opacity-80">
             愿你的每一刻都如星光般璀璨
@@ -93,7 +119,7 @@ const App: React.FC = () => {
                 包含了我们珍贵的回忆，和对未来的期许。
              </p>
              <button 
-                onClick={() => setHasStarted(true)}
+                onClick={handleStart}
                 className="px-12 py-4 bg-transparent border-2 border-gold text-gold font-serif text-xl tracking-[0.3em] hover:bg-gold hover:text-emerald-deep transition-all duration-500 shadow-[0_0_20px_#D4AF37]"
              >
                 开启惊喜
@@ -127,7 +153,18 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <div className="absolute top-8 right-8 z-20 pointer-events-auto">
+            {/* Top Right Controls: Music & Upload */}
+            <div className="absolute top-8 right-8 z-20 pointer-events-auto flex flex-col gap-4 items-end">
+                 {/* Music Toggle */}
+                 <button 
+                    onClick={toggleMute}
+                    className="w-10 h-10 border border-gold/30 text-gold flex items-center justify-center rounded-full hover:bg-gold hover:text-emerald-deep transition-all"
+                    title={isMuted ? "播放音乐" : "静音"}
+                 >
+                    {isMuted ? '🔇' : '🎵'}
+                 </button>
+
+                 {/* Upload Button */}
                  <input 
                    type="file" 
                    ref={fileInputRef} 
