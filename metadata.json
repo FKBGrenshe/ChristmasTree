@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Grand Luxury Interactive Christmas Tree",
+  "description": "A cinematic, Trump-style luxury 3D Christmas experience. Features interactive hand-gesture control to transform the tree from chaos to order, rendered with React Three Fiber.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
